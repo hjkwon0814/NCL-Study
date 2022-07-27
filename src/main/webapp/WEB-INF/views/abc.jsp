@@ -27,6 +27,10 @@
 	<script type="text/javascript"
 		src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1238e8951563cac78b42514b9f16f01e&libraries=services"></script>
 
+	<script>
+		
+	</script>
+
 
 	<script>
 		var container = document.getElementById('map'); //지도를 담을 영역의 DOM 레퍼런스
@@ -82,6 +86,12 @@
 			fillOpacity : 0.7
 		// 채우기 불투명도 입니다
 		});
+		
+		
+		var infowindow2 = new kakao.maps.InfoWindow(
+				{
+					position : kakao.maps.LatLng(marker2.getPosition().getLat(), marker2.getPosition().getLng())
+				});
 
 		// 지도에 다각형을 표시합니다
 		tri.setMap(map);
@@ -99,11 +109,9 @@
 			position : polygon.getPath()[4]
 		}) ];
 
-		poly_marker_list[0].setMap(map);
-		poly_marker_list[1].setMap(map);
-		poly_marker_list[2].setMap(map);
-		poly_marker_list[3].setMap(map);
-		poly_marker_list[4].setMap(map);
+		for (var i = 0; i < poly_marker_list.length; i++) {
+			poly_marker_list[i].setMap(map);
+		}
 
 		for (var i = 0; i < Object.keys(polygonPath).length; i++) {
 			var point1 = poly_marker_list[i].getPosition();
@@ -124,9 +132,7 @@
 			path.push(point1);
 			path.push(point2);
 
-
 			eachLine.setPath(path);
-
 
 			var distance = Math.round(eachLine.getLength()) / 2;
 
@@ -156,7 +162,10 @@
 	<script>
 		var xhr = new XMLHttpRequest();
 		var url = 'http://apis.data.go.kr/3160000/guroPm25DvcInfoSvc/getGuroComSvCtPm25Dvc'; /*URL*/
-		var queryParams = '?' + encodeURIComponent('serviceKey') + '=' + 's3FCx6soPjML6rIQUv7s9zFT222uWpkTQ6V1XaJbpXjIXE16aAHt06hXMtU7x5cikt2nk6HU%2BdybfSSzPy3juA%3D%3D'; /*Service Key*/
+		var queryParams = '?'
+				+ encodeURIComponent('serviceKey')
+				+ '='
+				+ 's3FCx6soPjML6rIQUv7s9zFT222uWpkTQ6V1XaJbpXjIXE16aAHt06hXMtU7x5cikt2nk6HU%2BdybfSSzPy3juA%3D%3D'; /*Service Key*/
 		queryParams += '&' + encodeURIComponent('returnType') + '='
 				+ encodeURIComponent('xml'); /**/
 		queryParams += '&' + encodeURIComponent('numOfRows') + '='
@@ -167,31 +176,105 @@
 		xhr.onreadystatechange = function() {
 			if (this.readyState == 4) {
 				var xml = xhr.responseXML;
-				
+
 				var items = xml.getElementsByTagName('item');
 				var itemsLon = xml.getElementsByTagName('lon');
 				var itemsLat = xml.getElementsByTagName('lat');
 				var markerList = new Array();
-				
-				for(var i=0; i<items.length; i++) {
+
+				for (var i = 0; i < items.length; i++) {
 					var lon = itemsLon[i].childNodes[0].data;
 					var lat = itemsLat[i].childNodes[0].data;
 					var ApiMarker = new kakao.maps.Marker({
 						position : new kakao.maps.LatLng(lat, lon)
 					}); // 마커생성
-					
+
 					markerList.push(ApiMarker);
 				}
-				
-				for(var i=0; i<markerList.length; i++) {
+
+				for (var i = 0; i < markerList.length; i++) {
 					markerList[i].setMap(map);
 				}
-				
-				
+
 			}
 		};
 
 		xhr.send('');
+	</script>
+	
+	
+	<script>
+		function send_address() {
+
+			var geocoder = new kakao.maps.services.Geocoder();
+			var address = document.getElementById('address').value;
+			var address_wrong = document.getElementById('address_wrong');
+			geocoder
+					.addressSearch(
+							address,
+							function(result, status) {
+
+								// 정상적으로 검색이 완료됐으면 
+								if (status === kakao.maps.services.Status.OK) {
+
+									address_wrong.innerHTML = ' ';
+									var coords = new kakao.maps.LatLng(
+											result[0].y, result[0].x);
+
+									// 결과값으로 받은 위치를 마커로 표시합니다
+									var marker = new kakao.maps.Marker({
+										map : map,
+										position : coords
+									});
+
+									// 인포윈도우로 장소에 대한 설명을 표시합니다
+									var infowindow = new kakao.maps.InfoWindow(
+											{
+												content : '<div style="width:150px;text-align:center;padding:6px 0;">입력된 주소 위치</div>'
+											});
+									infowindow.open(map, marker);
+
+									// 지도의 중심을 결과값으로 받은 위치로 이동시킵니다
+									map.setCenter(coords);
+								} else {
+									address_wrong.innerHTML = '잘못된 주소입니다.';
+								}
+							});
+		}
+
+		function send_coordi(coords, marker) {
+
+			searchDetailAddrFromCoords(coords, function(result, status) {
+				if (status === kakao.maps.services.Status.OK) {
+					var detailAddr = !!result[0].road_address ? '<div>도로명주소 : '
+							+ result[0].road_address.address_name + '</div>'
+							: '';
+					detailAddr += '<div>지번 주소 : '
+							+ result[0].address.address_name + '</div>';
+
+					var content = '<div class="bAddr">'
+							+ '<span class="title">법정동 주소정보</span>'
+							+ detailAddr + '</div>';
+
+					// 인포윈도우에 클릭한 위치에 대한 법정동 상세 주소정보를 표시합니다
+					infowindow.setContent(content);
+					infowindow.open(map, marker);
+				}
+			});
+		}
+
+		function searchAddrFromCoords(coords, callback) {
+			var geocoder = new kakao.maps.services.Geocoder();
+			// 좌표로 행정동 주소 정보를 요청합니다
+			geocoder.coord2RegionCode(coords.getLng(), coords.getLat(),
+					callback);
+		}
+
+		function searchDetailAddrFromCoords(coords, callback) {
+			var geocoder = new kakao.maps.services.Geocoder();
+			// 좌표로 법정동 상세 주소 정보를 요청합니다
+			geocoder.coord2Address(coords.getLng(), coords.getLat(), callback);
+		}
 	</script>
 
 	<script>
@@ -246,11 +329,7 @@
 									126.96902915912662) ]);
 			tri.setMap(map);
 		});
-		
-		kakao.maps.event.addListener(marker2, 'drag', function() {
-			console.log('hihihi');
-		});
-		
+
 		kakao.maps.event.addListener(marker2, 'dragend', function() {
 			var latlng = marker2.getPosition();
 			lat = latlng.getLat();
@@ -267,47 +346,35 @@
 									126.96902915912662) ]);
 			tri.setMap(map);
 		});
+
+		kakao.maps.event.addListener(marker2, 'mouseover', function() {
+			searchDetailAddrFromCoords(marker2.getPosition(), function(result,
+					status) {
+				if (status === kakao.maps.services.Status.OK) {
+					var detailAddr = !!result[0].road_address ? '<div>도로명주소 : '
+							+ result[0].road_address.address_name + '</div>'
+							: '';
+					detailAddr += '<div>지번 주소 : '
+							+ result[0].address.address_name + '</div>';
+
+					var content = '<div class="bAddr">'
+							+ '<span class="title">법정동 주소정보</span>'
+							+ detailAddr + '</div>';
+					
+
+					// 인포윈도우에 클릭한 위치에 대한 법정동 상세 주소정보를 표시합니다
+					infowindow2.setContent(content);
+					infowindow2.open(map, marker2);
+				}
+			});
+		});
+
+		kakao.maps.event.addListener(marker2, 'mouseout', function() {
+			infowindow2.close();
+		});
+			
 	</script>
 
-	<script>
-		function send_address() {
-
-			var geocoder = new kakao.maps.services.Geocoder();
-			var address = document.getElementById('address').value;
-			var address_wrong = document.getElementById('address_wrong');
-			geocoder
-					.addressSearch(
-							address,
-							function(result, status) {
-
-								// 정상적으로 검색이 완료됐으면 
-								if (status === kakao.maps.services.Status.OK) {
-
-									address_wrong.innerHTML = ' ';
-									var coords = new kakao.maps.LatLng(
-											result[0].y, result[0].x);
-
-									// 결과값으로 받은 위치를 마커로 표시합니다
-									var marker = new kakao.maps.Marker({
-										map : map,
-										position : coords
-									});
-
-									// 인포윈도우로 장소에 대한 설명을 표시합니다
-									var infowindow = new kakao.maps.InfoWindow(
-											{
-												content : '<div style="width:150px;text-align:center;padding:6px 0;">우리회사</div>'
-											});
-									infowindow.open(map, marker);
-
-									// 지도의 중심을 결과값으로 받은 위치로 이동시킵니다
-									map.setCenter(coords);
-								} else {
-									address_wrong.innerHTML = '잘못된 주소입니다.';
-								}
-							});
-		}
-	</script>
 
 </body>
 </html>
