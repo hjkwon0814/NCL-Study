@@ -14,5 +14,19 @@
 	
 	
 	<a href="http://localhost:8080/testapp/abc">이동하기</a>
+	
+	
+	<table border="1">
+		<tr>
+			<td>이름</td>
+			<td>나이</td>
+		</tr>
+		<c:forEach var="userlist" items="${HomeUsersList}">
+			<tr>
+				<td><c:out value="${userlist.getName()}"></c:out></td>
+				<td><c:out value="${userlist.getAge()}"></c:out></td>
+			</tr>
+		</c:forEach>
+	</table>
 </body>
 </html>
