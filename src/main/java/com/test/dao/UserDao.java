@@ -40,5 +40,13 @@ public class UserDao {
 
 		});
 	}
+	
+	public Integer updateUserVO(UserVO userVO, String name) {
+		
+		String sqlstatement = "update testuser set 이름=? where 이름=?";
+		
+		return jdbcTemplate.update(sqlstatement, name ,userVO.getName());
+	}
+	
 
 }

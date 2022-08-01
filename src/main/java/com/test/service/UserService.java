@@ -21,4 +21,9 @@ public class UserService {
 		
 	}
 	
+	
+	public Integer updateUserVO(UserVO userVO, String name) {
+		return userDao.updateUserVO(userVO, name);
+	}
+	
 }

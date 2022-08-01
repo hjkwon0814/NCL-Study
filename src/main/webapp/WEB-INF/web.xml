@@ -27,6 +27,7 @@
 				/WEB-INF/spring/appServlet/servlet-context.xml
 				/WEB-INF/spring/appServlet/dao-context.xml
 				/WEB-INF/spring/appServlet/service-context.xml
+				/WEB-INF/spring/appServlet/config-context.xml
 			</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
