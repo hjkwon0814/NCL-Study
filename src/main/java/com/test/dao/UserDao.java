@@ -45,7 +45,32 @@ public class UserDao {
 		
 		String sqlstatement = "update testuser set 이름=? where 이름=?";
 		
-		return jdbcTemplate.update(sqlstatement, name ,userVO.getName());
+		return jdbcTemplate.update(sqlstatement,name, userVO.getName());
+	}
+	
+	public Integer setUserVO(UserVO userVO)  {
+		
+		String sqlstatement = "insert into testuser(idTestUser, 이름, 나이) values(?,?,?)";
+		
+		return jdbcTemplate.update(sqlstatement,3,userVO.getName(), userVO.getAge());
+		
+	}
+	
+	public List<UserVO> getUserVO_ByName(String name) {
+		
+		String sqlstatement = "select * from testuser where 이름=?";
+		
+		return jdbcTemplate.query(sqlstatement ,new RowMapper<UserVO>() {
+
+			@Override
+			public UserVO mapRow(ResultSet rs, int rowNum) throws SQLException {
+				UserVO userVO = new UserVO();
+				userVO.setName(rs.getString("이름"));
+				userVO.setAge(rs.getInt("나이"));
+				return userVO;
+			}
+			
+		},name);
 	}
 	
 

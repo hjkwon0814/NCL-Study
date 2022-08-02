@@ -26,4 +26,14 @@ public class UserService {
 		return userDao.updateUserVO(userVO, name);
 	}
 	
+	
+	
+	public Integer insertUserVO(UserVO userVO) {
+		return userDao.setUserVO(userVO);
+	}
+	
+	public List<UserVO> getUserVO_ByName(String name) {
+		return userDao.getUserVO_ByName(name);
+	}
+	
 }
